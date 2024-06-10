@@ -2,38 +2,37 @@
 using DataAccseslayer.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Buffers.Text;
+using System.Security.AccessControl;
 
 namespace DataAccseslayer.Repositories
 {
     public class Repository<T>(AppDbContext dbContext) : IRepository<T> where T : BaseEntity
     {
         private readonly DbSet<T> _dbSet = dbContext.Set<T>();
-        private readonly AppDbContext _dbContext = dbContext;
+        protected readonly AppDbContext _dbContext = dbContext;
 
-        public Task AddAsync(T entity)
+        public async Task AddAsync(T entity)
         {
-            throw new NotImplementedException();
+            await _dbSet.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public Task DeleteAsync(int id)
+        public async Task DeleteAsync(T entity)
         {
-            throw new NotImplementedException();
+            _dbSet.Remove(entity);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<IQueryable<T>> GetAllAsync()
-        {
-            var enties  =  _dbSet.AsQueryable();
-            return enties;
-        }
+        public async Task<List<T>> GetAllAsync()
+         => await _dbSet.ToListAsync(); 
 
-        public Task<T> GetByIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task<T?> GetByIdAsync(int id)
+            => await _dbSet.FirstOrDefaultAsync(x => x.Id == id);
 
-        public Task UpdateAsync(T entity)
+        public async Task UpdateAsync(T entity)
         {
-            throw new NotImplementedException();
+            _dbSet.Update(entity);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
